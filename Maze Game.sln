@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.33214.272
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Maze Game", "Maze Game\Maze Game.vcxproj", "{D3D1F012-2A91-49CD-A450-08FB2F16CE5D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D3D1F012-2A91-49CD-A450-08FB2F16CE5D}.Debug|x64.ActiveCfg = Debug|x64
+		{D3D1F012-2A91-49CD-A450-08FB2F16CE5D}.Debug|x64.Build.0 = Debug|x64
+		{D3D1F012-2A91-49CD-A450-08FB2F16CE5D}.Debug|x86.ActiveCfg = Debug|Win32
+		{D3D1F012-2A91-49CD-A450-08FB2F16CE5D}.Debug|x86.Build.0 = Debug|Win32
+		{D3D1F012-2A91-49CD-A450-08FB2F16CE5D}.Release|x64.ActiveCfg = Release|x64
+		{D3D1F012-2A91-49CD-A450-08FB2F16CE5D}.Release|x64.Build.0 = Release|x64
+		{D3D1F012-2A91-49CD-A450-08FB2F16CE5D}.Release|x86.ActiveCfg = Release|Win32
+		{D3D1F012-2A91-49CD-A450-08FB2F16CE5D}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F0A0AA55-6694-4A1F-A886-838E2EB4B876}
+	EndGlobalSection
+EndGlobal
