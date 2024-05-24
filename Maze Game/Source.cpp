@@ -4,6 +4,10 @@
 #include <stack>
 #include <random>
 
+
+const int rows = 25;
+const int cols = 33;
+
 class Ball {
 public:
 	float x;
@@ -18,7 +22,7 @@ public:
 	}
 };
 
-void mazeWalls(bool maze[13][17], int rows, int columns, int cellSize) {
+void mazeWalls(bool maze[rows][cols], int rows, int columns, int cellSize) {
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < columns; j++) {
 			if (maze[i][j] == true) {
@@ -30,7 +34,7 @@ void mazeWalls(bool maze[13][17], int rows, int columns, int cellSize) {
 	}
 }
 
-void generateMaze(bool(&maze)[13][17], int rows, int cols) {
+void generateMaze(bool(&maze)[rows][cols], int rows, int cols) {
 	std::random_device rd;
 	std::mt19937 gen(rd());
 	std::uniform_int_distribution<int> dist(0, 1);
@@ -110,24 +114,24 @@ void printPath(std::stack<std::pair<int, int>> path) {
 	std::cout << std::endl;
 }
 
-bool navigateMaze(bool maze[13][17], int totalSpaces, int finishCol, int finishRow, bool (&visit)[13][17], std::stack<std::pair<int, int>>& finishPath) {
-	//bool visit[13][17];
+bool navigateMaze(bool maze[rows][cols], int totalSpaces, int finishCol, int finishRow, bool(&visit)[rows][cols], std::stack<std::pair<int, int>>& finishPath) {
+	//bool visit[rows][cols];
 	int visitCount = 0;
-	int curCellX = 12; //rows - 1
-	int curCellY = 15; //cols - 1
-	int lastCellX = 12;
-	int lastCellY = 15;
+	int curCellX = rows - 1; //rows - 1
+	int curCellY = cols - 1; //cols - 1
+	int lastCellX = rows - 1;
+	int lastCellY = cols - 1;
 	bool foundFlag = false;
 
 	//push the start onto the stack and mark it as visited, increase the visit counter 
 	std::stack <std::pair<int, int>> visitStack;
 
-	visitStack.push(std::make_pair(12, 15)); //mark the start as visited
+	visitStack.push(std::make_pair(rows - 1, cols - 1)); //mark the start as visited
 	visit[curCellX][curCellY] = true;
 	visitCount++;
 
 	std::pair<int, int> prevCell = visitStack.top();
-	
+
 	//search for an adjacent open space from left, up, right, down - exclude previous space. 
 	while (!visitStack.empty() && visitCount < totalSpaces) {
 		//std::cout << std::endl << "Size of the Stack: " << visitStack.size() << std::endl;
@@ -199,7 +203,7 @@ bool navigateMaze(bool maze[13][17], int totalSpaces, int finishCol, int finishR
 	}
 
 	else {
-		
+
 		std::cout << "Visit Count: " << visitCount << std::endl;
 		return false;
 	}
@@ -209,25 +213,25 @@ bool navigateMaze(bool maze[13][17], int totalSpaces, int finishCol, int finishR
 
 }
 
-//TODO: Fix the border, create a proper game loop, expand the maze, maybe touch up the maze to make it look better.
+//TODO: Fix the border, create a proper game loop, maybe touch up the maze to make it look better, reposition the finish, player and enemy so that they placed in the maze properly.
 
 int main() {
-	InitWindow(800, 600, "Maze");
+	InitWindow(1600, 1200, "Maze");
 	SetTargetFPS(60);
-	const int rows = 13;
-	const int cols = 17;
+	//const int rows = 13;
+	//const int cols = 17;
 
 	int cellSize = std::min(GetScreenWidth() / cols, GetScreenHeight() / rows);
 
-	float playerStartX = (15.53) * cellSize;//Make player start position proportionate to Maze cells 15 and 12 
-	float playerStartY = (12.53) * cellSize;
-	float enemyStartX = (15.53) * cellSize;
-	float enemyStartY = (12.53) * cellSize;
+	float playerStartX = (31.53) * cellSize;//Make player start position proportionate to Maze cells cols - 1 and rows - 1 
+	float playerStartY = (24.53) * cellSize;
+	float enemyStartX = (1.53) * cellSize;
+	float enemyStartY = (11.53) * cellSize;
 
 	Ball player;
 	player.newColor = DARKGREEN;
-	player.x = playerStartX; 
-	player.y = playerStartY; 
+	player.x = playerStartX;
+	player.y = playerStartY;
 	player.speed = 2;
 
 	Ball enemy;
@@ -236,7 +240,7 @@ int main() {
 	enemy.y = enemyStartY;
 	enemy.speed = 2;
 
-	float wallWidth = 10;	
+	float wallWidth = 10;
 
 	bool maze[rows][cols];
 	int totalSpaces = 0;
@@ -288,21 +292,21 @@ int main() {
 			for (int j = 0; j < cols; j++) {
 
 				if (maze[i][j] == true) {
-					std::cout << "X ";
+					//std::cout << "X ";
 				}
 
 				else {
 					if (visit[i][j] == true) {
-						std::cout << "O ";
+						//std::cout << "O ";
 					}
 
 					else {
-						std::cout << "  ";
+						//std::cout << "  ";
 					}
 				}
 			}
 
-			std::cout << std::endl;
+			//std::cout << std::endl;
 		}
 
 		// Print the generated maze to the console for visual inspection
@@ -316,7 +320,7 @@ int main() {
 	const char* winnerText = "You Win";
 
 	while (!WindowShouldClose()) {
-		
+
 		if (isMoving == false) {
 			if (IsKeyPressed(KEY_RIGHT)) {
 				if (player.x < (cols - 1) * cellSize && maze[int(player.y / cellSize)][int((player.x + cellSize) / cellSize)] == false) {
@@ -403,21 +407,21 @@ int main() {
 					for (int j = 0; j < cols; j++) {
 
 						if (maze[i][j] == true) {
-							std::cout << "X ";
+							//std::cout << "X ";
 						}
 
 						else {
 							if (visit[i][j] == true) {
-								std::cout << "O ";
+								//std::cout << "O ";
 							}
 
 							else {
-								std::cout << "  ";
+								//std::cout << "  ";
 							}
 						}
 					}
 
-					std::cout << std::endl;
+					//std::cout << std::endl;
 				}
 
 				// Print the generated maze to the console for visual inspection
@@ -432,7 +436,7 @@ int main() {
 				moveFlagLeft = false;
 				moveFlagDown = false;
 				moveFlagUp = false;
-				
+
 				counter++;
 			}
 		}
@@ -440,11 +444,11 @@ int main() {
 		//TODO:Make enemy character that uses that path to reach the end.
 			//Should fine tune the algorithm so that the shortest path is used as finishPath, maybe use DFS or something like that.
 		//Maybe make the bottom part of updating the player a function for both enemy and player to use.
-		
+
 		//make finish line proportionate to maze cells 8 and 1
 		float finishX = 8.31 * cellSize;
 		float finishY = 1.31 * cellSize;
-		
+
 		prevPosX = player.x;
 		prevPosY = player.y;
 
@@ -507,7 +511,7 @@ int main() {
 		else {
 			isMoving = true;
 		}
-	
+
 
 		BeginDrawing();
 		ClearBackground(BLACK);
@@ -525,7 +529,7 @@ int main() {
 
 		EndDrawing();
 	}
-	
+
 	CloseWindow();
 	return 0;
 }
