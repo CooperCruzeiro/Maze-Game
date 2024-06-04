@@ -87,6 +87,7 @@ void generateMaze(bool(&maze)[rows][cols], int rows, int cols) {
 
 		}
 	}
+
 	//MAYBE COMBINE THESE TWO FOR LOOPS 
 	for (int i = 1; i < rows - 1; i++) {
 		for (int j = 1; j < cols - 1; j++) {
@@ -102,7 +103,7 @@ void generateMaze(bool(&maze)[rows][cols], int rows, int cols) {
 
 	// Ensure that the start and finish cells are open spaces	
 	maze[rows - 1][cols - 2] = false; // Start
-	maze[1][8] = false; // Finish
+	maze[1][16] = false; // Finish
 }
 
 void printPath(std::stack<std::pair<int, int>> path) {
@@ -114,19 +115,109 @@ void printPath(std::stack<std::pair<int, int>> path) {
 	std::cout << std::endl;
 }
 
+void reverseStack(std::stack<std::pair<int, int>>& stack) {
+	std::stack<std::pair<int, int>> auxStack;
+
+	// Transfer all elements from the original stack to the auxiliary stack
+	while (!stack.empty()) {
+		auxStack.push(stack.top());
+		stack.pop();
+	}
+
+	stack = auxStack;
+	// Transfer the elements back to the original stack
+	//while (!auxStack.empty()) {
+	//	stack.push(auxStack.top());
+	//	auxStack.pop();
+	//}
+}
+
+
+int EnemyMove(std::stack<std::pair<int, int>>& finishPath) {
+	//int curCell;
+	//int nextCell;
+	int sum1 = NULL; // y-direction
+	int sum2 = NULL; // x-direction
+	std::pair<int, int> nextCell;
+
+	std::pair<int, int> element = finishPath.top();
+	if (!finishPath.empty()) {
+		finishPath.pop();
+
+		if (!finishPath.empty()) {
+			nextCell = finishPath.top();
+		}
+	}
+
+	sum1 = nextCell.first - element.first;
+	sum2 = nextCell.second - element.second;
+
+	if (sum1 < 0 && sum2 == 0) {			//up
+		std::cout << "up" << std::endl;
+		return 1;
+	}
+
+	else if (sum1 > 0 && sum2 == 0) {		//down
+		std::cout << "down" << std::endl;
+		return 2;
+	}
+
+	else if (sum1 == 0 && sum2 < 0) {		//left
+		std::cout << "left" << std::endl;
+		return 3;
+	}
+
+	else if (sum1 == 0 && sum2 > 0) {		//right
+		std::cout << "right" << std::endl;
+		return 4;
+	}
+
+	else { return -999; }
+
+
+
+	/*while (!finishPath.empty()) {
+		std::pair<int, int> element = finishPath.top();
+		finishPath.pop();
+		if (!finishPath.empty()) {
+			nextCell = finishPath.top();
+		}
+
+		sum1 = nextCell.first - element.first;
+		sum2 = nextCell.second - element.second;
+
+		if (sum1 < 0 && sum2  == 0) {
+			std::cout << "up" << std::endl;
+		}
+
+		if (sum1 > 0 && sum2 == 0) {
+			std::cout << "down" << std::endl;
+		}
+
+		if (sum1 == 0 && sum2 < 0) {
+			std::cout << "left" << std::endl;
+		}
+
+		if (sum1 == 0 && sum2 > 0) {
+			std::cout << "right" << std::endl;
+		}
+	}*/
+
+}
+
 bool navigateMaze(bool maze[rows][cols], int totalSpaces, int finishCol, int finishRow, bool(&visit)[rows][cols], std::stack<std::pair<int, int>>& finishPath) {
 	//bool visit[rows][cols];
 	int visitCount = 0;
-	int curCellX = rows - 1; //rows - 1
-	int curCellY = cols - 1; //cols - 1
+	int curCellX = rows - 2; //
+	int curCellY = 1; //start of path
 	int lastCellX = rows - 1;
-	int lastCellY = cols - 1;
+	int lastCellY = 1;
 	bool foundFlag = false;
 
 	//push the start onto the stack and mark it as visited, increase the visit counter 
 	std::stack <std::pair<int, int>> visitStack;
 
-	visitStack.push(std::make_pair(rows - 1, cols - 1)); //mark the start as visited
+	visitStack.push(std::make_pair(curCellX, curCellY)); //mark the start as visited
 	visit[curCellX][curCellY] = true;
 	visitCount++;
 
@@ -188,9 +279,10 @@ bool navigateMaze(bool maze[rows][cols], int totalSpaces, int finishCol, int fin
 
 		//std::cout << "Current Cell: " << curCellX << ", " << curCellY << std::endl << std::endl;
 
-		if (visit[finishRow][finishCol] == true && foundFlag == false) {	// If the finish is reached, copy the navigateMaze stack onto finishPath stack.
+		if (visit[finishRow][finishCol] == true && foundFlag == false) {	// If the finish is reached, copy the navigateMaze stack onto finishPath stack. LATER: ADJUST IT FOR ONLY EXECUTING FOR A COMPLETE MAZE.
 
 			finishPath = visitStack;
+			//reverseStack(finishPath);
 			foundFlag = true;
 		}
 
@@ -223,10 +315,10 @@ int main() {
 
 	int cellSize = std::min(GetScreenWidth() / cols, GetScreenHeight() / rows);
 
-	float playerStartX = (31.53) * cellSize;//Make player start position proportionate to Maze cells cols - 1 and rows - 1 
-	float playerStartY = (24.53) * cellSize;
+	float playerStartX = (cols - 1.47) * cellSize;//Make player start position proportionate to Maze cells cols - 1 and rows - 1 
+	float playerStartY = (rows - 0.47) * cellSize;
 	float enemyStartX = (1.53) * cellSize;
-	float enemyStartY = (11.53) * cellSize;
+	float enemyStartY = (rows - 1.47) * cellSize;
 
 	Ball player;
 	player.newColor = DARKGREEN;
@@ -248,12 +340,22 @@ int main() {
 	std::stack<std::pair<int, int>> finishPath;
 
 	float nextCell = -1;
+	float EnNextCell = -1;
+	std::stack<std::pair<int, int>> CurrCell;
+	std::stack<std::pair<int, int>> NextCell;
 
-	//mark which direction the player moves;
+
+	//mark which direction the player moves.
 	bool moveFlagLeft = false;
 	bool moveFlagRight = false;
 	bool moveFlagUp = false;
 	bool moveFlagDown = false;
+
+	//Mark which direction the enemy moves.
+	bool EnMoveFlagLeft = false;
+	bool EnMoveFlagRight = false;
+	bool EnMoveFlagUp = false;
+	bool EnMoveFlagDown = false;
 
 	//Keep track of the previous position to know when the player isn't moving anymore.
 	float prevPosX;
@@ -261,6 +363,7 @@ int main() {
 	bool isMoving = false;
 
 	int counter = 0;
+	int EnMovDir = 0;
 
 	while (mazeConnected == false) {
 		totalSpaces = 0;
@@ -286,7 +389,7 @@ int main() {
 			}
 		}
 
-		mazeConnected = navigateMaze(maze, totalSpaces, 8, 1, visit, finishPath);
+		mazeConnected = navigateMaze(maze, totalSpaces, 16, 1, visit, finishPath);
 
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
@@ -318,9 +421,10 @@ int main() {
 	}
 
 	const char* winnerText = "You Win";
+	bool EnMovFlag = false;
+	reverseStack(finishPath);
 
 	while (!WindowShouldClose()) {
-
 		if (isMoving == false) {
 			if (IsKeyPressed(KEY_RIGHT)) {
 				if (player.x < (cols - 1) * cellSize && maze[int(player.y / cellSize)][int((player.x + cellSize) / cellSize)] == false) {
@@ -401,7 +505,7 @@ int main() {
 					}
 				}
 
-				mazeConnected = navigateMaze(maze, totalSpaces, 8, 1, visit, finishPath); //DO I NEED TO PASS VISIT TO THE FUNCTION?
+				mazeConnected = navigateMaze(maze, totalSpaces, 16, 1, visit, finishPath); //DO I NEED TO PASS VISIT TO THE FUNCTION?
 
 				for (int i = 0; i < rows; i++) {
 					for (int j = 0; j < cols; j++) {
@@ -429,6 +533,8 @@ int main() {
 				std::cout << "Total Spaces: " << totalSpaces << std::endl;
 				std::cout << "Fully Connected Maze: " << mazeConnected << std::endl;
 
+
+				//Reset player and enemy postions and other variables to restart.
 				player.x = playerStartX;
 				player.y = playerStartY;
 
@@ -438,6 +544,12 @@ int main() {
 				moveFlagUp = false;
 
 				counter++;
+
+				bool EnMovFlag = false;
+				enemy.x = enemyStartX;
+				enemy.y = enemyStartY;
+				reverseStack(finishPath);
+				EnMovDir = -1;
 			}
 		}
 
@@ -446,8 +558,8 @@ int main() {
 		//Maybe make the bottom part of updating the player a function for both enemy and player to use.
 
 		//make finish line proportionate to maze cells 8 and 1
-		float finishX = 8.31 * cellSize;
-		float finishY = 1.31 * cellSize;
+		float finishX = ((cols / 2 ) + 0.33) * cellSize;
+		float finishY = (1.33) * cellSize;
 
 		prevPosX = player.x;
 		prevPosY = player.y;
@@ -508,8 +620,101 @@ int main() {
 		if (prevPosX == player.x && prevPosY == player.y) {
 			isMoving = false;
 		}
+
 		else {
 			isMoving = true;
+		}
+
+		////////////////////
+
+		
+		//create series of if else loops to decide which way the enemy should go and mark the corresponding flag.
+			//create function using finishPath to determine the next cell.
+				//Subtract the values of the current cell from the previous cell, if one of the values is different, that is the direction.
+
+
+		
+		if (!finishPath.empty() && EnMovFlag == false) {
+			EnMovDir = EnemyMove(finishPath);
+		}
+
+		if (EnMovDir == 1) {
+			if (EnMovFlag == false) {
+				EnNextCell = enemy.y - cellSize;		//distance between the enemy and the nextcell
+
+			}
+			EnMovFlag = true;
+			
+			if (enemy.y != EnNextCell) {
+				enemy.y -= enemy.speed;
+			}
+
+			else {
+				EnMovDir = 0;
+				EnMovFlag = false;
+				enemy.y = EnNextCell;
+			}
+
+		}
+
+		else if (EnMovDir == 2) {
+
+			if (EnMovFlag == false) {
+				EnNextCell = enemy.y + cellSize;
+
+			}
+			EnMovFlag = true;
+
+			if (enemy.y != EnNextCell) {
+				enemy.y += enemy.speed;
+			}
+
+			else {
+				EnMovDir = 0;
+				EnMovFlag = false;
+				enemy.y = EnNextCell;
+			}
+
+		}
+
+		else if (EnMovDir == 3) {
+
+			if (EnMovFlag == false) {
+				EnNextCell = enemy.x - cellSize;
+
+			}
+			EnMovFlag = true;
+
+			if (enemy.x != EnNextCell) {
+				enemy.x -= enemy.speed;
+			}
+
+			else {
+				EnMovDir = 0;
+				EnMovFlag = false;
+				enemy.x = EnNextCell;
+			}
+
+		}
+
+		else if (EnMovDir == 4) {
+
+			if (EnMovFlag == false) {
+				EnNextCell = enemy.x + cellSize;
+
+			}
+			EnMovFlag = true;
+
+			if (enemy.x != EnNextCell) {
+				enemy.x += enemy.speed;
+			}
+
+			else {
+				EnMovDir = 0;
+				EnMovFlag = false;
+				enemy.x = EnNextCell;
+			}
+
 		}
 
 
