@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <stack>
 #include <random>
+#include <string>
 
 
 const int rows = 25;
@@ -47,63 +48,57 @@ void generateMaze(bool(&maze)[rows][cols], int rows, int cols) {
 		}
 	}
 
-	for (int i = 1; i < rows; i += 2) {	//create grid pattern as basis for maze
-		for (int j = 1; j < cols; j += 2) {
-			maze[i][j] = false;
-		}
+	const std::vector<std::pair<int, int>> directions = {
+	   {-2, 0}, {2, 0}, {0, -2}, {0, 2}			//Passages are carved out two cells at time so that the thickness of the walls is always one cell
+	};
 
-	}
+	std::stack<std::pair<int, int>> stack;  //stack for processing cells
+	int startRow = 1, startCol = 1;
+	maze[startRow][startCol] = false;
+	stack.push({ startRow, startCol });
 
-	//creating gaps in the grid to create maze pattern
-	for (int i = 1; i < rows - 1; i++) {
-		for (int j = 1; j < cols - 1; j++) {
-			// Check if the cell is at an odd row and even column OR even row and odd column
-			// If true, this means we are at a potential gap cell
-			if ((i % 2 == 1 && j % 2 == 0) || (i % 2 == 0 && j % 2 == 1)) {
-				randNum = dist(gen);
-				if (randNum == 1) {
-					maze[i][j] = false; // Mark the cell as a passage (gap).
-				}
+	while (!stack.empty()) {
+		auto current = stack.top();
+			
+		int currentRow = current.first;			//Get row and column of current cell
+		int currentCol = current.second;
+
+		std::vector<std::pair<int, int>> neighbors; //holds a cell's neighbors which are two cells away
+
+		for (const auto& direction : directions) {			//Checks each direction for valid neighbors
+
+			int newRow = currentRow + direction.first;		//Calculate row and column of neighbor cell
+			int newCol = currentCol + direction.second;
+
+			if (newRow > 0 && newRow < rows - 1 && newCol > 0 && newCol < cols - 1 && maze[newRow][newCol]) {	//checks if neighbor is in bounds and is a wall, if so, added to the stack
+				neighbors.push_back({ newRow, newCol });
 			}
 		}
-	}
 
-	for (int i = 1; i < rows - 1; i++) {
-		for (int j = 1; j < cols - 1; j++) {
+		if (!neighbors.empty()) {
+			std::uniform_int_distribution<int> dist(0, neighbors.size() - 1);	
+			int randomIndex = dist(gen);
+			auto next = neighbors[randomIndex];		//Randomly pick a neighbor
 
-			if (maze[i][j] == true) {//fine tune maze, make it more likely to be connected throughout with less chance of island cells
-				if (maze[i - 1][j - 1] == true && maze[i][j - 1] == true && maze[i + 1][j - 1] == true && maze[i - 1][j + 1] == true && maze[i][j + 1] == true && maze[i + 1][j + 1] == true && maze[i - 1][j] == false && maze[i + 1][j] == false) {
-					maze[i][j] = false;
-				}
+			int nextRow = next.first;				//Get row and column of neighbor
+			int nextCol = next.second;
 
-				if (maze[i - 1][j - 1] == true && maze[i][j - 1] == false && maze[i + 1][j - 1] == true && maze[i - 1][j + 1] == true && maze[i][j + 1] == false && maze[i + 1][j + 1] == true && maze[i - 1][j] == true && maze[i + 1][j] == true) {
-					maze[i][j] = false;
-				}
-
-				if (maze[i - 1][j - 1] == true && maze[i][j - 1] == true && maze[i + 1][j - 1] == true && maze[i - 1][j + 1] == true && maze[i][j + 1] == true && maze[i + 1][j + 1] == false && maze[i - 1][j] == false && maze[i + 1][j] == false) {
-					maze[i][j] = false;
-				}
-			}
-
+			maze[nextRow][nextCol] = false;			//mark neighbor cell as an open space
+			maze[currentRow + (nextRow - currentRow) / 2][currentCol + (nextCol - currentCol) / 2] = false; //Mark cell between current and neighbor as an open space also
+			stack.push({ nextRow, nextCol });
 		}
-	}
-
-	//MAYBE COMBINE THESE TWO FOR LOOPS 
-	for (int i = 1; i < rows - 1; i++) {
-		for (int j = 1; j < cols - 1; j++) {
-			if (maze[i + 1][j] == true && maze[i][j + 1] == true && maze[i - 1][j] == true && maze[i][j - 1] == true) {
-				maze[i][j - 1] = false;
-			}
-
-			if (maze[i + 1][j] == false && maze[i][j + 1] == false && maze[i - 1][j] == false && maze[i][j - 1] == false) {
-				maze[i + 1][j] = true;
-			}
+		else {				//If a cell has no neighbors it is popped from the stack
+			stack.pop();
 		}
-	}
+	}	
+
+	// Ensure start and end are open
+	maze[1][1] = false; // Start
+	maze[rows - 2][cols - 2] = false; // End
 
 	// Ensure that the start and finish cells are open spaces	
 	maze[rows - 1][cols - 2] = false; // Start
-	maze[1][16] = false; // Finish
+	maze[1][cols/2] = false; // Finish
 }
 
 void printPath(std::stack<std::pair<int, int>> path) {
@@ -210,8 +205,6 @@ bool navigateMaze(bool maze[rows][cols], int totalSpaces, int finishCol, int fin
 	int visitCount = 0;
 	int curCellX = rows - 2; //
 	int curCellY = 1; //start of path
-	int lastCellX = rows - 1;
-	int lastCellY = 1;
 	bool foundFlag = false;
 
 	//push the start onto the stack and mark it as visited, increase the visit counter 
@@ -278,7 +271,7 @@ bool navigateMaze(bool maze[rows][cols], int totalSpaces, int finishCol, int fin
 		}
 
 		//std::cout << "Current Cell: " << curCellX << ", " << curCellY << std::endl << std::endl;
-
+		
 		if (visit[finishRow][finishCol] == true && foundFlag == false) {	// If the finish is reached, copy the navigateMaze stack onto finishPath stack. LATER: ADJUST IT FOR ONLY EXECUTING FOR A COMPLETE MAZE.
 
 			finishPath = visitStack;
@@ -338,12 +331,12 @@ int main() {
 	int totalSpaces = 0;
 	bool mazeConnected = false;
 	std::stack<std::pair<int, int>> finishPath;
+	std::stack<std::pair<int, int>> emptyStack; //To empty the finsishPath stack when maze is restarted.
 
 	float nextCell = -1;
 	float EnNextCell = -1;
 	std::stack<std::pair<int, int>> CurrCell;
 	std::stack<std::pair<int, int>> NextCell;
-
 
 	//mark which direction the player moves.
 	bool moveFlagLeft = false;
@@ -364,6 +357,10 @@ int main() {
 
 	int counter = 0;
 	int EnMovDir = 0;
+	bool finishFoundPlayer = false;
+	bool finishFoundEnemy = false;
+
+	int points = 10000;
 
 	while (mazeConnected == false) {
 		totalSpaces = 0;
@@ -389,7 +386,7 @@ int main() {
 			}
 		}
 
-		mazeConnected = navigateMaze(maze, totalSpaces, 16, 1, visit, finishPath);
+		mazeConnected = navigateMaze(maze, totalSpaces, cols / 2, 1, visit, finishPath);
 
 		for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
@@ -421,12 +418,20 @@ int main() {
 	}
 
 	const char* winnerText = "You Win";
+	const char* loserText = "You Lose";
+
 	bool EnMovFlag = false;
 	reverseStack(finishPath);
 
 	while (!WindowShouldClose()) {
+		// Convert points to string
+		std::string pointsStr = "Points: " + std::to_string(points);
+
+		// Convert string to C-string
+		const char* pointsCStr = pointsStr.c_str();
+
 		if (isMoving == false) {
-			if (IsKeyPressed(KEY_RIGHT)) {
+			if (IsKeyDown(KEY_RIGHT)) {
 				if (player.x < (cols - 1) * cellSize && maze[int(player.y / cellSize)][int((player.x + cellSize) / cellSize)] == false) {
 
 					nextCell = player.x + cellSize;
@@ -438,7 +443,7 @@ int main() {
 				}
 			}
 
-			if (IsKeyPressed(KEY_LEFT)) {
+			if (IsKeyDown(KEY_LEFT)) {
 				if (player.x > 0 && maze[int(player.y / cellSize)][int((player.x - cellSize) / cellSize)] == false) {
 
 					nextCell = player.x - cellSize;
@@ -450,7 +455,7 @@ int main() {
 				}
 			}
 
-			if (IsKeyPressed(KEY_DOWN)) {
+			if (IsKeyDown(KEY_DOWN)) {
 				if (player.y < (rows - 1) * cellSize && maze[int((player.y + cellSize) / cellSize)][int(player.x / cellSize)] == false) {
 
 					nextCell = player.y + cellSize;
@@ -462,7 +467,7 @@ int main() {
 				}
 			}
 
-			if (IsKeyPressed(KEY_UP)) {
+			if (IsKeyDown(KEY_UP)) {
 				if (player.y > 0 && maze[int((player.y - cellSize) / cellSize)][int(player.x / cellSize)] == false) {
 
 					nextCell = player.y - cellSize;
@@ -480,6 +485,12 @@ int main() {
 
 			mazeConnected = false;
 			int counter = 0;
+			EnMovDir = 0;
+			finishFoundPlayer = false;
+			finishFoundEnemy = false;
+			finishPath.swap(emptyStack);
+
+			points = 10000;
 
 			while (mazeConnected == false) {
 				totalSpaces = 0;
@@ -505,7 +516,7 @@ int main() {
 					}
 				}
 
-				mazeConnected = navigateMaze(maze, totalSpaces, 16, 1, visit, finishPath); //DO I NEED TO PASS VISIT TO THE FUNCTION?
+				mazeConnected = navigateMaze(maze, totalSpaces, cols / 2, 1, visit, finishPath); //DO I NEED TO PASS VISIT TO THE FUNCTION?
 
 				for (int i = 0; i < rows; i++) {
 					for (int j = 0; j < cols; j++) {
@@ -545,10 +556,11 @@ int main() {
 
 				counter++;
 
-				bool EnMovFlag = false;
+				EnMovFlag = false;
 				enemy.x = enemyStartX;
 				enemy.y = enemyStartY;
 				reverseStack(finishPath);
+
 				EnMovDir = -1;
 			}
 		}
@@ -558,7 +570,7 @@ int main() {
 		//Maybe make the bottom part of updating the player a function for both enemy and player to use.
 
 		//make finish line proportionate to maze cells 8 and 1
-		float finishX = ((cols / 2 ) + 0.33) * cellSize;
+		float finishX = ((cols / 2) + 0.33) * cellSize;
 		float finishY = (1.33) * cellSize;
 
 		prevPosX = player.x;
@@ -627,13 +639,13 @@ int main() {
 
 		////////////////////
 
-		
+
 		//create series of if else loops to decide which way the enemy should go and mark the corresponding flag.
 			//create function using finishPath to determine the next cell.
 				//Subtract the values of the current cell from the previous cell, if one of the values is different, that is the direction.
 
 
-		
+
 		if (!finishPath.empty() && EnMovFlag == false) {
 			EnMovDir = EnemyMove(finishPath);
 		}
@@ -644,7 +656,7 @@ int main() {
 
 			}
 			EnMovFlag = true;
-			
+
 			if (enemy.y != EnNextCell) {
 				enemy.y -= enemy.speed;
 			}
@@ -727,9 +739,22 @@ int main() {
 
 		player.Draw();
 		enemy.Draw();
+		DrawText(pointsCStr, 10, 10, 40, DARKGRAY);
 
-		if (CheckCollisionCircleRec(Vector2{ player.x, player.y }, player.radius, Rectangle{ finishX, finishY, 20, 20 })) {
+
+		if (CheckCollisionCircleRec(Vector2{ player.x, player.y }, player.radius, Rectangle{ finishX, finishY, 20, 20 }) && finishFoundEnemy == false) {
 			DrawText(winnerText, GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 - 30, 60, GREEN);
+			finishFoundPlayer = true;
+		}
+
+		else if (CheckCollisionCircleRec(Vector2{ enemy.x, enemy.y }, enemy.radius, Rectangle{ finishX, finishY, 20, 20 }) && finishFoundPlayer == false) {
+			DrawText(loserText, GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 - 30, 60, RED);
+			finishFoundEnemy = true;
+			points = 0;
+		}
+
+		if (finishFoundPlayer == false && finishFoundEnemy == false) {
+			points--;
 		}
 
 		EndDrawing();
