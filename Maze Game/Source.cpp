@@ -41,7 +41,7 @@ void generateMaze(bool(&maze)[rows][cols], int rows, int cols) {
 	std::uniform_int_distribution<int> dist(0, 1);
 
 	int randNum;
-
+	
 	for (int i = 0; i < rows; i++) {
 		for (int j = 0; j < cols; j++) {
 			maze[i][j] = true; // Initialize all cells as walls
@@ -53,7 +53,8 @@ void generateMaze(bool(&maze)[rows][cols], int rows, int cols) {
 	};
 
 	std::stack<std::pair<int, int>> stack;  //stack for processing cells
-	int startRow = 1, startCol = 1;
+	int startRow = rows - 2;
+	int startCol = 1;
 	maze[startRow][startCol] = false;
 	stack.push({ startRow, startCol });
 
@@ -127,12 +128,15 @@ void reverseStack(std::stack<std::pair<int, int>>& stack) {
 	//}
 }
 
+bool approxEqual(float a, float b, float tolerance) {
+	return std::abs(a - b) <= tolerance;
+}
 
 int EnemyMove(std::stack<std::pair<int, int>>& finishPath) {
 	//int curCell;
 	//int nextCell;
-	int sum1 = NULL; // y-direction
-	int sum2 = NULL; // x-direction
+	float sum1 = NULL; // y-direction
+	float sum2 = NULL; // x-direction
 	std::pair<int, int> nextCell;
 
 	std::pair<int, int> element = finishPath.top();
@@ -168,35 +172,6 @@ int EnemyMove(std::stack<std::pair<int, int>>& finishPath) {
 	}
 
 	else { return -999; }
-
-
-
-	/*while (!finishPath.empty()) {
-		std::pair<int, int> element = finishPath.top();
-		finishPath.pop();
-		if (!finishPath.empty()) {
-			nextCell = finishPath.top();
-		}
-
-		sum1 = nextCell.first - element.first;
-		sum2 = nextCell.second - element.second;
-
-		if (sum1 < 0 && sum2  == 0) {
-			std::cout << "up" << std::endl;
-		}
-
-		if (sum1 > 0 && sum2 == 0) {
-			std::cout << "down" << std::endl;
-		}
-
-		if (sum1 == 0 && sum2 < 0) {
-			std::cout << "left" << std::endl;
-		}
-
-		if (sum1 == 0 && sum2 > 0) {
-			std::cout << "right" << std::endl;
-		}
-	}*/
 
 }
 
@@ -323,7 +298,7 @@ int main() {
 	enemy.newColor = RED;
 	enemy.x = enemyStartX;
 	enemy.y = enemyStartY;
-	enemy.speed = 2;
+	enemy.speed = 1.5;
 
 	float wallWidth = 10;
 
@@ -430,11 +405,12 @@ int main() {
 		// Convert string to C-string
 		const char* pointsCStr = pointsStr.c_str();
 
+		//Check input from user to see what direction they chose to move
 		if (isMoving == false) {
 			if (IsKeyDown(KEY_RIGHT)) {
 				if (player.x < (cols - 1) * cellSize && maze[int(player.y / cellSize)][int((player.x + cellSize) / cellSize)] == false) {
 
-					nextCell = player.x + cellSize;
+					nextCell = player.x + cellSize; //next cell/position player moves to
 
 					moveFlagRight = true;
 					moveFlagLeft = false;
@@ -481,6 +457,7 @@ int main() {
 
 		}
 
+		//in program restart
 		if (IsKeyPressed(KEY_SPACE)) {
 
 			mazeConnected = false;
@@ -489,7 +466,6 @@ int main() {
 			finishFoundPlayer = false;
 			finishFoundEnemy = false;
 			finishPath.swap(emptyStack);
-
 			points = 10000;
 
 			while (mazeConnected == false) {
@@ -576,6 +552,8 @@ int main() {
 		prevPosX = player.x;
 		prevPosY = player.y;
 
+
+		//When the player is moving, they keep moving until the next cell is reached
 		if (moveFlagRight == true) {
 
 			if (player.x != nextCell) {
@@ -645,14 +623,14 @@ int main() {
 				//Subtract the values of the current cell from the previous cell, if one of the values is different, that is the direction.
 
 
-
+		//Enemy uses finishPath to reach end
 		if (!finishPath.empty() && EnMovFlag == false) {
 			EnMovDir = EnemyMove(finishPath);
 		}
 
 		if (EnMovDir == 1) {
 			if (EnMovFlag == false) {
-				EnNextCell = enemy.y - cellSize;		//distance between the enemy and the nextcell
+				EnNextCell = enemy.y - cellSize;		//distance between the enemy and the next cell
 
 			}
 			EnMovFlag = true;
@@ -741,12 +719,13 @@ int main() {
 		enemy.Draw();
 		DrawText(pointsCStr, 10, 10, 40, DARKGRAY);
 
-
+		//Win screen if player reaches end
 		if (CheckCollisionCircleRec(Vector2{ player.x, player.y }, player.radius, Rectangle{ finishX, finishY, 20, 20 }) && finishFoundEnemy == false) {
 			DrawText(winnerText, GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 - 30, 60, GREEN);
 			finishFoundPlayer = true;
 		}
 
+		//Lose screen if enemy reaches end first
 		else if (CheckCollisionCircleRec(Vector2{ enemy.x, enemy.y }, enemy.radius, Rectangle{ finishX, finishY, 20, 20 }) && finishFoundPlayer == false) {
 			DrawText(loserText, GetScreenWidth() / 2 - 100, GetScreenHeight() / 2 - 30, 60, RED);
 			finishFoundEnemy = true;
