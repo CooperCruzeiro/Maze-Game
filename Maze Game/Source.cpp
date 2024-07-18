@@ -6,8 +6,8 @@
 #include <string>
 
 
-const int rows = 25;
-const int cols = 33;
+const int rows = 49;	//need to be odd numbers
+const int cols = 65;
 
 class Ball {
 public:
@@ -546,8 +546,8 @@ int main() {
 		//Maybe make the bottom part of updating the player a function for both enemy and player to use.
 
 		//make finish line proportionate to maze cells 8 and 1
-		float finishX = ((cols / 2) + 0.33) * cellSize;
-		float finishY = (1.33) * cellSize;
+		float finishX = (cols/2) * cellSize;
+		float finishY = cellSize;
 
 		prevPosX = player.x;
 		prevPosY = player.y;
@@ -713,7 +713,7 @@ int main() {
 
 		mazeWalls(maze, rows, cols, cellSize);
 
-		DrawRectangle(finishX, finishY, 20, 20, GREEN); //Finish Line    
+		DrawRectangle(finishX, finishY, cellSize, cellSize, GREEN); //Finish Line    
 
 		player.Draw();
 		enemy.Draw();
